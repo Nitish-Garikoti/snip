@@ -26,6 +26,7 @@ EPOCHS = 250
 REPEAT_WITH_DIFFERENT_SEED = 3
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+#print(device)
 
 
 def apply_prune_mask(net, keep_masks):
@@ -184,7 +185,7 @@ class VGG_SNIP(nn.Module):
     def forward(self, x):
         x = self.features(x)
         x = x.view(x.size(0), -1)
-        x = self.classifier(x)
+        x = self.classifier(x)  
         x = F.log_softmax(x, dim=1)
         return x
 
@@ -271,12 +272,12 @@ def mnist_experiment():
 
 
 def cifar10_experiment():
-
+    
     BATCH_SIZE = 128
     LR_DECAY_INTERVAL = 30000
-
+    
     net = VGG_SNIP('D').to(device)
-
+    
     optimiser = optim.SGD(
         net.parameters(),
         lr=INIT_LR,
@@ -284,7 +285,7 @@ def cifar10_experiment():
         weight_decay=WEIGHT_DECAY_RATE)
     lr_scheduler = optim.lr_scheduler.StepLR(
         optimiser, LR_DECAY_INTERVAL, gamma=0.1)
-
+    
     train_loader, val_loader = get_cifar10_dataloaders(BATCH_SIZE,
                                                        BATCH_SIZE)  # TODO
 
@@ -300,7 +301,7 @@ def train():
     # Pre-training pruning using SKIP
     keep_masks = SNIP(net, 0.05, train_loader, device)  # TODO: shuffle?
     apply_prune_mask(net, keep_masks)
-
+    
     trainer = create_supervised_trainer(net, optimiser, F.nll_loss, device)
     evaluator = create_supervised_evaluator(net, {
         'accuracy': Accuracy(),
